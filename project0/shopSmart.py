@@ -28,10 +28,11 @@ def shopSmart(orderList, fruitShops):
         orderList: List of (fruit, numPound) tuples
         fruitShops: List of FruitShops
     """
+    # initialize minimum total cost
     minTotalCost = fruitShops[0].getPriceOfOrder(orderList)
-
+    # initialize cheapest shop
     cheapShop = fruitShops[0]
-
+    # find actual cheapest shop
     for shop in fruitShops:
         if(shop.getPriceOfOrder(orderList) < minTotalCost):
             minTotalCost = shop.getPriceOfOrder(orderList)

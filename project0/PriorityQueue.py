@@ -23,31 +23,36 @@ class PriorityQueue:
                     # update existing item priority
                     self.heap[self.heap.index(i)] = (priority,item)
                 return
-        else:
-            self.push(item,priority)
+        # item doesnt exist in PQ so we push it
+        self.push(item,priority)
 
 def PQSort(intlist):
     pq = PriorityQueue()
     result = []
+    # heap requires (priority,item) and because we only want to sort integers we push the same value to both priority and item
     for i in intlist:
         pq.push(i,i)
     while (not pq.isEmpty()):
         result.append(pq.pop()[1])
     return result
 
-
+# A simple main to test the code
 if __name__ == '__main__':
-
     pq = PriorityQueue()
-    intlist = [1,3,2]
-    print PQSort(intlist)
-    # pq.push("task1", 1)
-    # pq.push("task2", 3)
-    # pq.push("task3", 2)
-    # print pq.heap,pq.count
-    # pq.update("task2", 2)
-    # pq.update("task1", 2)
-    # print pq.heap,pq.count
-    # print pq.pop(),pq.count
-    # print pq.pop(),pq.count
-    # print pq.pop(),pq.count
+    pq.push("task1", 1)
+    pq.push("task2", 2)
+    pq.push("task3", 0)
+    print "Added 3 new tasks:",pq.heap,",count =",pq.count
+    print "Updating tasks..."
+    pq.update("task2", 3)
+    pq.update("task1", 0)
+    pq.update("task4", 5)
+    pq.update("task4", 6)
+    print "Tasks after update: ",pq.heap,",count =",pq.count
+    print "Popping tasks with ascending priority order:"
+    while (not pq.isEmpty()):
+        print pq.pop(),",count =",pq.count
+    print "----------------------------------------------"
+    intlist = [1,3,2,5,4,9,8,6]
+    print "Orderind list:",intlist,"using PQSort"
+    print "Sorted:",PQSort(intlist)
