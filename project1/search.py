@@ -86,8 +86,26 @@ def depthFirstSearch(problem):
     print "Is the start a goal?", problem.isGoalState(problem.getStartState())
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    solution=[]
+    node = (problem.getStartState(),[],0)
+    if(problem.isGoalState(node[0])):
+        return solution
+    frontier = util.Stack()
+    frontier.push(node)
+    explored = set()
+    while(not frontier.isEmpty()):
+        node = frontier.pop()
+        explored.add(node[0])
+        for child in problem.getSuccessors(node[0]):
+            existsinFrontier=False
+            for i in frontier.list:
+                if(child[0] == i[0]):
+                    existsinFrontier=True
+            if((child[0] not in explored) and (not existsinFrontier)):
+                if(problem.isGoalState(child[0])):
+                    print "Solution = ",node[1]
+                    return node[1]+[child[1]]
+                frontier.push((child[0],node[1]+[child[1]],0))
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
