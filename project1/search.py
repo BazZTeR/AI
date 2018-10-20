@@ -92,10 +92,10 @@ def depthFirstSearch(problem):
         return solution
     frontier = util.Stack()
     frontier.push(node)
-    explored = set()
+    explored = []
     while(not frontier.isEmpty()):
         node = frontier.pop()
-        explored.add(node[0])
+        explored.append(node[0])
         for child in problem.getSuccessors(node[0]):
             existsinFrontier=False
             for i in frontier.list:
@@ -115,10 +115,10 @@ def breadthFirstSearch(problem):
         return solution
     frontier = util.Queue()
     frontier.push(node)
-    explored = set()
+    explored = []
     while(not frontier.isEmpty()):
         node = frontier.pop()
-        explored.add(node[0])
+        explored.append(node[0])
         for child in problem.getSuccessors(node[0]):
             existsinFrontier=False
             for i in frontier.list:
@@ -140,6 +140,9 @@ def uniformCostSearch(problem):
     explored = set()
     while(not frontier.isEmpty()):
         node = frontier.pop()
+        if(problem.isGoalState(node[0])):
+            print "Solution = ",node[1]
+            return node[1]
         explored.add(node[0])
         for child in problem.getSuccessors(node[0]):
             existsinFrontier=False
@@ -147,9 +150,6 @@ def uniformCostSearch(problem):
                 if(child[0] == i[0]):
                     existsinFrontier=True
             if((child[0] not in explored) and (not existsinFrontier)):
-                if(problem.isGoalState(child[0])):
-                    print "Solution = ",node[1]
-                    return node[1]+[child[1]]
                 frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]),node[2]+child[2])
 
 def nullHeuristic(state, problem=None):
@@ -161,8 +161,43 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    solution=[]
+    node = (problem.getStartState(),[],0)
+    if(problem.isGoalState(node[0])):
+        return solution
+    frontier = util.PriorityQueue()
+    frontier.push(node,0)
+    explored = []
+    while(not frontier.isEmpty()):
+        node = frontier.pop()
+        if(problem.isGoalState(node[0])):
+            print "Solution = ",node[1]
+            return node[1]
+        explored.append(node)
+        for child in problem.getSuccessors(node[0]):
+            existsinFrontier=False
+            existsinExplored=False
+            for i in range(len(frontier.heap)):
+                if(child[0] == frontier.heap[i][2][0]):
+                    existsinFrontier=True
+                    frontierPos = i
+            for i in range(len(explored)):
+                if(child[0] == explored[i][0]):
+                    existsinExplored=True
+                    exploredPos = i
+            h = heuristic(child[0],problem)
+            if((not existsinExplored) and (not existsinFrontier)):
+                frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]+h),node[2]+child[2]+h)
+            else:
+                if (existsinExplored and explored[exploredPos][2] > node[2]+child[2]+h):
+                    explored[exploredPos] = (child[0],node[1]+[child[1]],node[2]+child[2]+h)
+                elif(existsinFrontier and frontier.heap[frontierPos][0] > node[2]+child[2]+h):
+                    print "deleting" ,frontier.heap[frontierPos],"from",frontier.heap
+                    del frontier.heap[frontierPos]
+                    print "after deletion",frontier.heap
+                    frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]),node[2]+child[2]+h)
+
+
 
 
 # Abbreviations
