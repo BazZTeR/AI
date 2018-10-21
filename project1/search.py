@@ -178,13 +178,15 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             existsinFrontier=False
             existsinExplored=False
             for i in range(len(frontier.heap)):
-                if(child[0] == frontier.heap[i][2][0]):
+                if(child[0][0] == frontier.heap[i][2][0][0]):
                     existsinFrontier=True
                     frontierPos = i
+                    break
             for i in range(len(explored)):
                 if(child[0] == explored[i][0]):
                     existsinExplored=True
                     exploredPos = i
+                    break
             h = heuristic(child[0],problem)
             if((not existsinExplored) and (not existsinFrontier)):
                 frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]+h),node[2]+child[2]+h)
@@ -192,11 +194,10 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                 if (existsinExplored and explored[exploredPos][2] > node[2]+child[2]+h):
                     explored[exploredPos] = (child[0],node[1]+[child[1]],node[2]+child[2]+h)
                 elif(existsinFrontier and frontier.heap[frontierPos][0] > node[2]+child[2]+h):
-                    print "deleting" ,frontier.heap[frontierPos],"from",frontier.heap
                     del frontier.heap[frontierPos]
-                    print "after deletion",frontier.heap
                     frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]),node[2]+child[2]+h)
-
+    print "Solution = ",node[1]
+    return node[1]
 
 
 

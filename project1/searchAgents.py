@@ -307,7 +307,6 @@ class CornersProblem(search.SearchProblem):
         for corner in self.corners:
             if corner not in state[1]:
                 return False
-        print "all corners found",state[1]
         return True
 
     def getSuccessors(self, state):
@@ -373,12 +372,12 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     position = state[0]
-    corners = state[1]
+    cornersExplored = state[1]
     distance = 0
     
     for i in corners:
-        distance =  max(distance,(abs(i[0] - position[0]) + abs(i[1] - position[1])))
-    # print "distance = ",distance
+        if(i not in cornersExplored and distance < abs(i[0] - position[0]) + abs(i[1] - position[1])):
+            distance = abs(i[0] - position[0]) + abs(i[1] - position[1])
     return distance
 
 class AStarCornersAgent(SearchAgent):
@@ -472,8 +471,13 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    # print position, foodGrid
+    distance = 0
+    for foodPos in foodGrid.asList():
+        maxFoodDist = abs(position[0]-foodPos[0])+abs(position[1]-foodPos[1])
+        if(distance < maxFoodDist):
+            distance = maxFoodDist
+    return distance
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -503,8 +507,7 @@ class ClosestDotSearchAgent(SearchAgent):
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return search.breadthFirstSearch(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -539,8 +542,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         """
         x,y = state
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.food[x][y]
 
 def mazeDistance(point1, point2, gameState):
     """
