@@ -103,7 +103,6 @@ def depthFirstSearch(problem):
                     existsinFrontier=True
             if((child[0] not in explored) and (not existsinFrontier)):
                 if(problem.isGoalState(child[0])):
-                    print "Solution = ",node[1]
                     return node[1]+[child[1]]
                 frontier.push((child[0],node[1]+[child[1]],0))
 
@@ -126,7 +125,6 @@ def breadthFirstSearch(problem):
                     existsinFrontier=True
             if((child[0] not in explored) and (not existsinFrontier)):
                 if(problem.isGoalState(child[0])):
-                    print "Solution = ",node[1]
                     return node[1]+[child[1]]
                 frontier.push((child[0],node[1]+[child[1]],0))
 
@@ -137,19 +135,29 @@ def uniformCostSearch(problem):
         return solution
     frontier = util.PriorityQueue()
     frontier.push(node,0)
-    explored = set()
+    explored = []
     while(not frontier.isEmpty()):
         node = frontier.pop()
         if(problem.isGoalState(node[0])):
             print "Solution = ",node[1]
             return node[1]
-        explored.add(node[0])
+        explored.append(node)
         for child in problem.getSuccessors(node[0]):
             existsinFrontier=False
-            for i in frontier.heap:
-                if(child[0] == i[0]):
+            existsinExplored=False
+            for i in range(len(frontier.heap)):
+                if(child[0] == frontier.heap[i][2][0]):
                     existsinFrontier=True
-            if((child[0] not in explored) and (not existsinFrontier)):
+                    frontierPos = i
+                    break
+            for i in range(len(explored)):
+                if(child[0] == explored[i][0]):
+                    existsinExplored=True
+                    break
+            if((not existsinExplored) and (not existsinFrontier)):
+                frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]),node[2]+child[2])
+            elif(existsinFrontier and frontier.heap[frontierPos][0] > node[2]+child[2]):
+                del frontier.heap[frontierPos]
                 frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]),node[2]+child[2])
 
 def nullHeuristic(state, problem=None):
@@ -171,33 +179,26 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     while(not frontier.isEmpty()):
         node = frontier.pop()
         if(problem.isGoalState(node[0])):
-            print "Solution = ",node[1]
             return node[1]
         explored.append(node)
         for child in problem.getSuccessors(node[0]):
             existsinFrontier=False
             existsinExplored=False
             for i in range(len(frontier.heap)):
-                if(child[0][0] == frontier.heap[i][2][0][0]):
+                if(child[0] == frontier.heap[i][2][0]):
                     existsinFrontier=True
                     frontierPos = i
                     break
             for i in range(len(explored)):
                 if(child[0] == explored[i][0]):
                     existsinExplored=True
-                    exploredPos = i
                     break
             h = heuristic(child[0],problem)
             if((not existsinExplored) and (not existsinFrontier)):
                 frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]+h),node[2]+child[2]+h)
-            else:
-                if (existsinExplored and explored[exploredPos][2] > node[2]+child[2]+h):
-                    explored[exploredPos] = (child[0],node[1]+[child[1]],node[2]+child[2]+h)
-                elif(existsinFrontier and frontier.heap[frontierPos][0] > node[2]+child[2]+h):
-                    del frontier.heap[frontierPos]
-                    frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]),node[2]+child[2]+h)
-    print "Solution = ",node[1]
-    return node[1]
+            elif(existsinFrontier and frontier.heap[frontierPos][0] > node[2]+child[2]+h):
+                del frontier.heap[frontierPos]
+                frontier.push((child[0],node[1]+[child[1]],node[2]+child[2]+h),node[2]+child[2]+h)
 
 
 
