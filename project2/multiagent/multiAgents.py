@@ -158,13 +158,11 @@ class MinimaxAgent(MultiAgentSearchAgent):
         if depth == self.depth:
             return self.evaluationFunction(gameState)
         maxval = -float("inf")
-        for action in gameState.getLegalActions():
-            if action == Directions.STOP:
-                continue
+        for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex,action)
-            minval = self.minValue(successor,agentIndex+1,depth)
-            if(minval > maxval):
-                maxval = minval
+            v = self.minValue(successor,agentIndex+1,depth)
+            if(v > maxval):
+                maxval = v
                 returnAction = action
 
         if depth == 0:
@@ -175,19 +173,17 @@ class MinimaxAgent(MultiAgentSearchAgent):
         if gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
         minval = float("inf")
-        for action in gameState.getLegalActions():
-            if action == Directions.STOP:
-                continue
+        for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex,action)
             # check if agentIndex is the last ghost to play in this round
             if(agentIndex == gameState.getNumAgents() - 1):
                 # call max
-                temp = self.maxValue(successor,0,depth+1)
-                minval = min(temp,minval)
+                v = self.maxValue(successor,0,depth+1)
+                minval = min(v,minval)
             else:
                 # call min
-                temp = self.minValue(successor,agentIndex+1,depth)
-                minval = min(temp,minval)
+                v = self.minValue(successor,agentIndex+1,depth)
+                minval = min(v,minval)
         return minval 
 
 
@@ -200,8 +196,46 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.maxValue(gameState,0,0,-float("inf"),float("inf"))
+    
+    def maxValue(self,gameState,agentIndex,depth,a,b):
+        # check for terminal state
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        if depth == self.depth:
+            return self.evaluationFunction(gameState)
+        maxval = -float("inf")
+        for action in gameState.getLegalActions(agentIndex):
+            successor = gameState.generateSuccessor(agentIndex,action)
+            v = self.minValue(successor,agentIndex+1,depth,a,b)
+            if(v > maxval):
+                maxval = v
+                returnAction = action
+            if(v > b):
+                return v
+            a = max(v,a)
+        if depth == 0:
+            return returnAction
+        return maxval 
+
+    def minValue(self,gameState,agentIndex,depth,a,b):
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        minval = float("inf")
+        for action in gameState.getLegalActions(agentIndex):
+            successor = gameState.generateSuccessor(agentIndex,action)
+            # check if agentIndex is the last ghost to play in this round
+            if(agentIndex == gameState.getNumAgents() - 1):
+                # call max
+                v = self.maxValue(successor,0,depth+1,a,b)
+            else:
+                # call min
+                v = self.minValue(successor,agentIndex+1,depth,a,b)
+            minval = min(v,minval)
+            if(minval < a):
+                return minval
+            b = min(b,v)
+        return minval 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -215,8 +249,45 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           All ghosts should be modeled as choosing uniformly at random from their
           legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.maxValue(gameState,0,0)
+
+    def maxValue(self,gameState,agentIndex,depth):
+        # check for terminal state
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        if depth == self.depth:
+            return self.evaluationFunction(gameState)
+        maxval = -float("inf")
+        for action in gameState.getLegalActions(agentIndex):
+            successor = gameState.generateSuccessor(agentIndex,action)
+            v = self.minValue(successor,agentIndex+1,depth)
+            if(v > maxval):
+                maxval = v
+                returnAction = action
+
+        if depth == 0:
+            return returnAction
+        return maxval 
+
+    def minValue(self,gameState,agentIndex,depth):
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        minval = float("inf")
+        retVal = 0
+        chance = 1.0/len(gameState.getLegalActions(agentIndex))
+        for action in gameState.getLegalActions(agentIndex):
+            successor = gameState.generateSuccessor(agentIndex,action)
+            # check if agentIndex is the last ghost to play in this round
+            if(agentIndex == gameState.getNumAgents() - 1):
+                # call max
+                v = self.maxValue(successor,0,depth+1)
+                minval = min(v,minval)
+            else:
+                # call min
+                v = self.minValue(successor,agentIndex+1,depth)
+                minval = min(v,minval)
+            retVal += v*chance
+        return retVal 
 
 def betterEvaluationFunction(currentGameState):
     """
