@@ -43,13 +43,12 @@ class ReflexAgent(Agent):
 
         # Choose one of the best actions
         scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
+        print "----------------------"
         bestScore = max(scores)
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
         chosenIndex = random.choice(bestIndices) # Pick randomly among the best
 
         "Add more of your code here if you want to"
-        
-        
 
         return legalMoves[chosenIndex]
 
@@ -69,14 +68,34 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
+        print action
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
-        newFood = successorGameState.getFood()
+        # newFood = successorGameState.getFood()
+        newFood = currentGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
-        "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        # print newFood
+        # for i in newGhostStates:
+        #     print i.getPosition()
+        # print newScaredTimes
+
+        if action == "Stop":
+            return -1
+        max = 1000000
+        # go to closest food while evading ghosts
+        mindist = max
+        for food in newFood.asList():
+            dist = manhattanDistance(newPos, food)
+            closestGhostdist = max
+            for ghostState in newGhostStates:
+                closestGhostdist = min(closestGhostdist,manhattanDistance(newPos,ghostState.getPosition()))
+                closestGhostState = ghostState
+            if dist < mindist and (closestGhostdist > 1 or closestGhostState.scaredTimer > closestGhostdist):
+                mindist = dist
+        print max - mindist
+        return max - mindist
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -130,8 +149,47 @@ class MinimaxAgent(MultiAgentSearchAgent):
           gameState.getNumAgents():
             Returns the total number of agents in the game
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.maxValue(gameState,0,0)
+
+    def maxValue(self,gameState,agentIndex,depth):
+        # check for terminal state
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        if depth == self.depth:
+            return self.evaluationFunction(gameState)
+        maxval = -float("inf")
+        for action in gameState.getLegalActions():
+            if action == Directions.STOP:
+                continue
+            successor = gameState.generateSuccessor(agentIndex,action)
+            minval = self.minValue(successor,agentIndex+1,depth)
+            if(minval > maxval):
+                maxval = minval
+                returnAction = action
+
+        if depth == 0:
+            return returnAction
+        return maxval 
+
+    def minValue(self,gameState,agentIndex,depth):
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        minval = float("inf")
+        for action in gameState.getLegalActions():
+            if action == Directions.STOP:
+                continue
+            successor = gameState.generateSuccessor(agentIndex,action)
+            # check if agentIndex is the last ghost to play in this round
+            if(agentIndex == gameState.getNumAgents() - 1):
+                # call max
+                temp = self.maxValue(successor,0,depth+1)
+                minval = min(temp,minval)
+            else:
+                # call min
+                temp = self.minValue(successor,agentIndex+1,depth)
+                minval = min(temp,minval)
+        return minval 
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
