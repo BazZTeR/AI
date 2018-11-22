@@ -14,7 +14,7 @@
 
 from util import manhattanDistance
 from game import Directions
-import random, util
+import random, util, sys
 
 from game import Agent
 
@@ -43,7 +43,6 @@ class ReflexAgent(Agent):
 
         # Choose one of the best actions
         scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
-        print "----------------------"
         bestScore = max(scores)
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
         chosenIndex = random.choice(bestIndices) # Pick randomly among the best
@@ -68,33 +67,24 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
-        print action
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
-        # newFood = successorGameState.getFood()
         newFood = currentGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
-        # print newFood
-        # for i in newGhostStates:
-        #     print i.getPosition()
-        # print newScaredTimes
-
-        if action == "Stop":
-            return -1
         max = 1000000
         # go to closest food while evading ghosts
         mindist = max
         for food in newFood.asList():
             dist = manhattanDistance(newPos, food)
             closestGhostdist = max
+            # find closest ghost
             for ghostState in newGhostStates:
                 closestGhostdist = min(closestGhostdist,manhattanDistance(newPos,ghostState.getPosition()))
                 closestGhostState = ghostState
+            # closest food where there are no nearby ghosts (only scared ghosts)
             if dist < mindist and (closestGhostdist > 1 or closestGhostState.scaredTimer > closestGhostdist):
                 mindist = dist
-        print max - mindist
         return max - mindist
 
 def scoreEvaluationFunction(currentGameState):
@@ -157,7 +147,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             return self.evaluationFunction(gameState)
         if depth == self.depth:
             return self.evaluationFunction(gameState)
-        maxval = -float("inf")
+        maxval = -sys.maxint-1
         for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex,action)
             v = self.minValue(successor,agentIndex+1,depth)
@@ -165,14 +155,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 maxval = v
                 returnAction = action
 
-        if depth == 0:
-            return returnAction
-        return maxval 
+        if depth != 0:
+            return maxval
+        return returnAction 
 
     def minValue(self,gameState,agentIndex,depth):
         if gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
-        minval = float("inf")
+        minval = sys.maxint
         for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex,action)
             # check if agentIndex is the last ghost to play in this round
@@ -196,7 +186,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        return self.maxValue(gameState,0,0,-float("inf"),float("inf"))
+        return self.maxValue(gameState,0,0,-sys.maxint-1,sys.maxint)
     
     def maxValue(self,gameState,agentIndex,depth,a,b):
         # check for terminal state
@@ -204,7 +194,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             return self.evaluationFunction(gameState)
         if depth == self.depth:
             return self.evaluationFunction(gameState)
-        maxval = -float("inf")
+        maxval = -sys.maxint-1
         for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex,action)
             v = self.minValue(successor,agentIndex+1,depth,a,b)
@@ -214,14 +204,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             if(v > b):
                 return v
             a = max(v,a)
-        if depth == 0:
-            return returnAction
-        return maxval 
+        if depth != 0:
+            return maxval
+        return returnAction 
 
     def minValue(self,gameState,agentIndex,depth,a,b):
         if gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
-        minval = float("inf")
+        minval = sys.maxint
         for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex,action)
             # check if agentIndex is the last ghost to play in this round
@@ -257,35 +247,34 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             return self.evaluationFunction(gameState)
         if depth == self.depth:
             return self.evaluationFunction(gameState)
-        maxval = -float("inf")
+        maxval = -sys.maxint-1
         for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex,action)
-            v = self.minValue(successor,agentIndex+1,depth)
+            v = self.expValue(successor,agentIndex+1,depth)
             if(v > maxval):
                 maxval = v
                 returnAction = action
+        if depth != 0:
+            return maxval
+        return returnAction 
 
-        if depth == 0:
-            return returnAction
-        return maxval 
-
-    def minValue(self,gameState,agentIndex,depth):
+    def expValue(self,gameState,agentIndex,depth):
         if gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
-        minval = float("inf")
         retVal = 0
-        chance = 1.0/len(gameState.getLegalActions(agentIndex))
+        count = 0
+        for i in gameState.getLegalActions(agentIndex):
+            count += 1
+        chance = 1.0/count
         for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex,action)
             # check if agentIndex is the last ghost to play in this round
             if(agentIndex == gameState.getNumAgents() - 1):
                 # call max
                 v = self.maxValue(successor,0,depth+1)
-                minval = min(v,minval)
             else:
-                # call min
-                v = self.minValue(successor,agentIndex+1,depth)
-                minval = min(v,minval)
+                # call exp
+                v = self.expValue(successor,agentIndex+1,depth)
             retVal += v*chance
         return retVal 
 
@@ -296,9 +285,35 @@ def betterEvaluationFunction(currentGameState):
 
       DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    
+    # Useful information you can extract from a GameState (pacman.py)
+    result = 0
+
+    pos = currentGameState.getPacmanPosition()
+    Food = currentGameState.getFood()
+    ghostStates = currentGameState.getGhostStates()
+    
+    max = 100000
+
+    # go to closest food while evading ghosts
+    minFoodDist = max
+
+    # find closest food distance
+    for food in Food.asList():
+        dist = manhattanDistance(pos, food)
+        if dist < minFoodDist:
+            minFoodDist = dist
+    # find closest ghost and its distance
+    closestGhostdist = max
+    for ghostState in ghostStates:  
+        closestGhostdist = min(closestGhostdist,manhattanDistance(pos,ghostState.getPosition()))
+        closestGhostState = ghostState
+    # if ghost is scared then try to eat it by chasing it
+    if(closestGhostState.scaredTimer > 0):
+        result += 100*1.0/(1+closestGhostdist)
+
+    result += currentGameState.getScore() + 10*1.0/(1+minFoodDist) + 1000*1.0/(1+currentGameState.getNumFood()) - 0.1*closestGhostdist
+    return result
 
 # Abbreviation
 better = betterEvaluationFunction
-
