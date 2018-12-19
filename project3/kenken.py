@@ -63,8 +63,10 @@ class kenken(CSP):
 				group = []
 
 	def constraints(self,A,a,B,b):
-		# check if the two variables are in the same row or column and ensure that they have different values
 		print(A,a,B,b)
+		assignment = self.infer_assignment()
+		print(assignment)
+		# check if the two variables are in the same row or column and ensure that they have different values
 		if(A[0] == B[0] or A[1] == B[1]):
 			if(a==b):
 				return False
@@ -72,11 +74,37 @@ class kenken(CSP):
 		for group in self.groups:
 			if(A in group and B in group):
 				result = 0
-				# check that group operation is valid
+				# check if group operation is valid
 				if(group[-2] == '+'):
-					
-
-
+					result += a + b
+					for var in group:
+						result += assignment[var]
+					if result == group[-1]:
+						return True
+					return False
+				elif(group[-2] == '-'):
+					if(a > b):
+						return a-b == group[-1]
+					else:
+						return b-a == group[-1]
+				elif(group[-2] == '*'):
+					result = a * b
+					for var in group:
+						result *= assignment[var]
+					if result == group[-1]:
+						return True
+					return False
+				elif(group[-2] == '/'):
+					if(a > b):
+						return a/b == group[-1]
+					else:
+						return b/a == group[-1]
+				else:
+					# null operator
+					return a == group[-1]
+			else:
+				# A and B are not in the same group
+				return True
 
 # Main function
 
