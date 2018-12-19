@@ -1,7 +1,5 @@
 from csp import *
 
-#SUBSCRIBE TO PEWDIEPIE
-
 class kenken(CSP):
 	def __init__(self,input):
 		self.gridSize = 0
@@ -22,7 +20,7 @@ class kenken(CSP):
 			domainList.append(i+1)
 		# fill domains
 		for i in self.variables:
-			self.domains[i] = domainList
+			self.domains[i] = domainList.copy()
 
 		# fill neighbors
 		for i in self.variables:
@@ -53,7 +51,8 @@ class kenken(CSP):
 		# set domains values
 		group = []
 		for i in input.split():
-			if(len(i) == 3):
+			if '.' in i:
+				# varbiable format: X.X
 				group.append((int(i[0]),int(i[2])))
 			elif(i=="null" or i=="+" or i=="-" or i=="*" or i=="/"):
 				group.append(i)
@@ -61,6 +60,7 @@ class kenken(CSP):
 				group.append(i)
 				self.groups.append(group)
 				group = []
+		print(self.groups)
 
 	def constraints(self,A,a,B,b):
 		print(A,a,B,b)
@@ -78,7 +78,8 @@ class kenken(CSP):
 				if(group[-2] == '+'):
 					result += a + b
 					for var in group:
-						result += assignment[var]
+						if(var in assignment):
+							result += assignment[var]
 					if result == group[-1]:
 						return True
 					return False
@@ -105,24 +106,80 @@ class kenken(CSP):
 			else:
 				# A and B are not in the same group
 				return True
-
-# Main function
-
+	def kenken_display(self,assignment):
+		for i in list(range(self.gridSize)):
+			for j in sorted(assignment.items()):
+				if j[0][0] == i:
+					print(j[1], end=" ")
+			print('\n',end="")
+			
 # inputs
-easy = '3x3'\
-'0.0 null 1'\
-'1.0 1.1 + 5'\
-'2.0 2.1 / 3'\
-'0.1 0.2 - 1'\
-'1.2 2.2 - 1'
+easy =	'''3x3
+0.0 null 1
+1.0 1.1 + 5
+2.0 2.1 / 3
+0.1 0.2 - 1
+1.2 2.2 - 1'''
 
-easy = 	 '''3x3
-			0.0 null 1
-			1.0 1.1 + 5
-			2.0 2.1 / 3
-			0.1 0.2 - 1
-			1.2 2.2 - 1'''
+easy2 = '''3x3
+0.0 1.0 1.1 + 5
+0.1 null 2
+0.2 1.2 + 5
+2.0 2.1 + 5
+2.2 null 1'''
+
+medium =	'''6x6
+			0.0 1.0 + 11
+			0.1 0.2 / 2
+			0.3 1.3 * 20
+			0.4 0.5 1.5 2.5 * 6
+			1.1 1.2 - 3
+			1.4 2.4 / 3
+			2.0 2.1 3.0 3.1 * 240
+			2.2 2.3 * 6
+			4.0 4.1 * 6
+			3.2 4.2 * 6
+			3.3 4.3 4.4 + 7
+			3.4 3.5 * 30
+			5.0 5.1 5.2 + 8
+			5.3 5.4 / 2
+			4.5 5.5 + 9'''
 
 input = easy
 k = kenken(input)
-backtracking_search(k)
+
+# BT
+print("____________________")
+print("_________BT_________")
+res = backtracking_search(k)
+k.kenken_display(res)
+
+# BT+MRV
+print("____________________")
+print("_______BT+MRV_______")
+res = backtracking_search(k, select_unassigned_variable=mrv)
+k.kenken_display(res)
+
+# FC
+print("____________________")
+print("_________FC_________")
+res = backtracking_search(k, inference=forward_checking)
+k.kenken_display(res)
+
+# FC+MRV
+print("____________________")
+print("_______FC+MRV_______")
+res = backtracking_search(k, select_unassigned_variable=mrv,inference=forward_checking)
+k.kenken_display(res)
+
+# MAC
+print("____________________")
+print("_________MAC________")
+res = backtracking_search(k, inference=mac)
+k.kenken_display(res)
+
+# MinConflicts
+print("____________________")
+print("____MinConflicts____")
+res = min_conflicts(k)
+k.kenken_display(res)
