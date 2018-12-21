@@ -176,7 +176,7 @@ hard2 =	'''6x6
 5.4 null 3'''
 
 # select input grid from above
-input = hard1
+input = easy
 
 # BT
 print("____________________")
@@ -189,16 +189,17 @@ mykenken.print(res)
 print("nassigns =",mykenken.nassigns)
 print("Time =",end-start,"seconds")
 
-# # BT+MRV
-# print("____________________")
-# print("_______BT+MRV_______")
-# mykenken = kenken(input)
-# start = time.time()
-# res = backtracking_search(mykenken, select_unassigned_variable=mrv)
-# end = time.time()
-# mykenken.print(res)
-# print("nassigns =",mykenken.nassigns)
-# print("Time =",end-start,"seconds")
+# TAKES A LOT OF TIME TO FINISH (read pdf document)
+# BT+MRV
+print("____________________")
+print("_______BT+MRV_______")
+mykenken = kenken(input)
+start = time.time()
+res = backtracking_search(mykenken, select_unassigned_variable=mrv)
+end = time.time()
+mykenken.print(res)
+print("nassigns =",mykenken.nassigns)
+print("Time =",end-start,"seconds")
 
 # FC
 print("____________________")
