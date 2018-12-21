@@ -1,4 +1,5 @@
 from csp import *
+import time
 
 class kenken(CSP):
 	def __init__(self,input):
@@ -33,11 +34,11 @@ class kenken(CSP):
 			for j in range(self.gridSize):
 				if(i[1] != j):
 					neighbors.append((i[0],j))
-			# neighbors in the same clique
+			# neighbors in the same group
 			for group in self.groups:
 				if(i in group):
 					for var in group[:-2]:
-						if(var!=i):
+						if(var!=i and var not in neighbors):
 							neighbors.append(var)
 			self.neighbors[i] = neighbors
 
@@ -46,41 +47,52 @@ class kenken(CSP):
 	def load_input(self,input):
 		# set grid size
 		self.gridSize = int(input[0])
-		print("grid size = " ,self.gridSize)
 		input = input[3:]
 		# set domains values
 		group = []
 		for i in input.split():
 			if '.' in i:
-				# varbiable format: X.X
+				# varbiable format: X.Y
 				group.append((int(i[0]),int(i[2])))
 			elif(i=="null" or i=="+" or i=="-" or i=="*" or i=="/"):
 				group.append(i)
 			else:
-				group.append(i)
+				group.append(int(i))
 				self.groups.append(group)
 				group = []
-		print(self.groups)
+
+	# print result grid
+	def print(self,assignment):
+		counter = 0
+		for i in range(self.gridSize):
+			for j in range(self.gridSize):
+				print(str(assignment[(i,j)])+"|",end = '')
+				counter += 1
+				if(counter == self.gridSize):
+					counter = 0
+					print("")
 
 	def constraints(self,A,a,B,b):
-		print(A,a,B,b)
 		assignment = self.infer_assignment()
-		print(assignment)
 		# check if the two variables are in the same row or column and ensure that they have different values
 		if(A[0] == B[0] or A[1] == B[1]):
 			if(a==b):
 				return False
-		# A and B in the same group
 		for group in self.groups:
 			if(A in group and B in group):
+				# A and B in the same group
 				result = 0
 				# check if group operation is valid
 				if(group[-2] == '+'):
-					result += a + b
+					result = a + b
+					counter = 0
 					for var in group:
-						if(var in assignment):
+						if(var in assignment and var != A and var != B):
 							result += assignment[var]
-					if result == group[-1]:
+							counter += 1
+					if result < group[-1] and counter < len(group)-4:
+						return True
+					elif result == group[-1] and counter == len(group)-4:
 						return True
 					return False
 				elif(group[-2] == '-'):
@@ -90,9 +102,14 @@ class kenken(CSP):
 						return b-a == group[-1]
 				elif(group[-2] == '*'):
 					result = a * b
+					counter = 0
 					for var in group:
-						result *= assignment[var]
-					if result == group[-1]:
+						if(var in assignment and var != A and var != B):
+							result *= assignment[var]
+							counter += 1
+					if result <= group[-1] and counter < len(group)-4:
+						return True
+					elif result == group[-1] and counter == len(group)-4:
 						return True
 					return False
 				elif(group[-2] == '/'):
@@ -100,18 +117,8 @@ class kenken(CSP):
 						return a/b == group[-1]
 					else:
 						return b/a == group[-1]
-				else:
-					# null operator
-					return a == group[-1]
-			else:
-				# A and B are not in the same group
-				return True
-	def kenken_display(self,assignment):
-		for i in list(range(self.gridSize)):
-			for j in sorted(assignment.items()):
-				if j[0][0] == i:
-					print(j[1], end=" ")
-			print('\n',end="")
+		# A and B are not in the same group
+		return True
 			
 # inputs
 easy =	'''3x3
@@ -121,65 +128,118 @@ easy =	'''3x3
 0.1 0.2 - 1
 1.2 2.2 - 1'''
 
-easy2 = '''3x3
-0.0 1.0 1.1 + 5
-0.1 null 2
-0.2 1.2 + 5
-2.0 2.1 + 5
-2.2 null 1'''
+medium = '''5x5
+0.0 1.0 + 3
+0.1 0.2 0.3 + 8
+0.4 1.4 + 7
+1.1 2.0 2.1 + 9
+1.2 2.2 + 9
+1.3 2.3 2.4 + 9
+3.0 4.0 3.1 + 9
+3.2 3.3 + 6
+4.1 4.2 + 7
+4.3 null 3
+3.4 4.4 + 5'''
 
-medium =	'''6x6
-			0.0 1.0 + 11
-			0.1 0.2 / 2
-			0.3 1.3 * 20
-			0.4 0.5 1.5 2.5 * 6
-			1.1 1.2 - 3
-			1.4 2.4 / 3
-			2.0 2.1 3.0 3.1 * 240
-			2.2 2.3 * 6
-			4.0 4.1 * 6
-			3.2 4.2 * 6
-			3.3 4.3 4.4 + 7
-			3.4 3.5 * 30
-			5.0 5.1 5.2 + 8
-			5.3 5.4 / 2
-			4.5 5.5 + 9'''
+hard1 =	'''6x6
+0.0 1.0 + 11
+0.1 0.2 / 2
+0.3 1.3 * 20
+0.4 0.5 1.5 2.5 * 6
+1.1 1.2 - 3
+1.4 2.4 / 3
+2.0 2.1 3.0 3.1 * 240
+2.2 2.3 * 6
+4.0 4.1 * 6
+3.2 4.2 * 6
+3.3 4.3 4.4 + 7
+3.4 3.5 * 30
+5.0 5.1 5.2 + 8
+5.3 5.4 / 2
+4.5 5.5 + 9'''
 
-input = easy
-k = kenken(input)
+hard2 =	'''6x6
+0.0 0.1 0.2 1.0 + 18
+1.1 1.2 - 2
+0.3 1.3 1.4 * 30
+0.4 0.5 - 1
+1.5 2.5 / 3
+2.0 3.0 4.0 + 6
+2.1 3.1 - 1
+2.2 2.3 2.4 * 60
+3.2 4.2 - 2
+3.3 3.4 / 2
+4.3 4.4 - 2
+3.5 4.5 5.5 * 120
+5.0 4.1 5.1 + 13
+5.2 5.3 - 2
+5.4 null 3'''
+
+# select input grid from above
+input = hard1
 
 # BT
 print("____________________")
 print("_________BT_________")
-res = backtracking_search(k)
-k.kenken_display(res)
+mykenken = kenken(input)
+start = time.time()
+res = backtracking_search(mykenken)
+end = time.time()
+mykenken.print(res)
+print("nassigns =",mykenken.nassigns)
+print("Time =",end-start,"seconds")
 
-# BT+MRV
-print("____________________")
-print("_______BT+MRV_______")
-res = backtracking_search(k, select_unassigned_variable=mrv)
-k.kenken_display(res)
+# # BT+MRV
+# print("____________________")
+# print("_______BT+MRV_______")
+# mykenken = kenken(input)
+# start = time.time()
+# res = backtracking_search(mykenken, select_unassigned_variable=mrv)
+# end = time.time()
+# mykenken.print(res)
+# print("nassigns =",mykenken.nassigns)
+# print("Time =",end-start,"seconds")
 
 # FC
 print("____________________")
 print("_________FC_________")
-res = backtracking_search(k, inference=forward_checking)
-k.kenken_display(res)
+mykenken = kenken(input)
+start = time.time()
+res = backtracking_search(mykenken, inference=forward_checking)
+end = time.time()
+mykenken.print(res)
+print("nassigns =",mykenken.nassigns)
+print("Time =",end-start,"seconds")
 
 # FC+MRV
 print("____________________")
 print("_______FC+MRV_______")
-res = backtracking_search(k, select_unassigned_variable=mrv,inference=forward_checking)
-k.kenken_display(res)
+mykenken = kenken(input)
+start = time.time()
+res = backtracking_search(mykenken, select_unassigned_variable=mrv,inference=forward_checking)
+end = time.time()
+mykenken.print(res)
+print("nassigns =",mykenken.nassigns)
+print("Time =",end-start,"seconds")
 
 # MAC
 print("____________________")
 print("_________MAC________")
-res = backtracking_search(k, inference=mac)
-k.kenken_display(res)
+mykenken = kenken(input)
+start = time.time()
+res = backtracking_search(mykenken, inference=mac)
+end = time.time()
+mykenken.print(res)
+print("nassigns =",mykenken.nassigns)
+print("Time =",end-start,"seconds")
 
 # MinConflicts
 print("____________________")
 print("____MinConflicts____")
-res = min_conflicts(k)
-k.kenken_display(res)
+mykenken = kenken(input)
+start = time.time()
+res = min_conflicts(mykenken)
+end = time.time()
+mykenken.print(res)
+print("nassigns =",mykenken.nassigns)
+print("Time =",end-start,"seconds")
